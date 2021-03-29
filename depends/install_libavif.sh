@@ -41,7 +41,41 @@ echo "::endgroup::"
 
 if which cargo 1>/dev/null 2>/dev/null; then
     echo "::group::Installing rav1e"
+
+    PATH="$HOME/.cargo/bin:$PATH"
+
+    if ! which cargo-cbuild 1>/dev/null 2>/dev/null; then
+        if [ $(uname) == "Darwin" ]; then
+            CARGO_C_TGZ=https://github.com/lu-zero/cargo-c/releases/download/v0.8.0/cargo-c-macos.zip
+            TAR=bsdtar
+        else
+            CARGO_C_TGZ=https://github.com/lu-zero/cargo-c/releases/download/v0.8.0/cargo-c-linux.tar.gz
+            TAR=tar
+        fi
+        curl -sLo - $CARGO_C_TGZ  | $TAR -C $HOME/.cargo/bin -zxf -
+    fi
+
+    if [ ! -d rav1e ]; then
+        mkdir rav1e
+        curl -sLo - \
+            https://github.com/xiph/rav1e/archive/refs/tags/v0.4.0.tar.gz \
+            | tar --strip-components=1 -C rav1e -zxf -
+    fi
+
+    (cd rav1e && patch -t -N -p0 -i ../../../rav1e-0.4.0-fix-build.patch ||:)
+
+    perl -pi -e 's/^(cargo install cargo-c)$/\# $1/g' rav1e.cmd
     bash rav1e.cmd
+
+    # Check if cargo-c saved build files to a host-specific target directory,
+    # and if so copy the files to the location where libavif expects them to be
+    RUST_HOST=$(rustc -vV | perl -ne 'print "$1\n" if /^host: (.+)$/')
+    if [ -n "$RUST_HOST" ]; then
+        if [ -e rav1e/target/$RUST_HOST/release/rav1e.h ]; then
+            cp -a rav1e/target/$RUST_HOST/release rav1e/target
+        fi
+    fi
+
     LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON -DAVIF_LOCAL_RAV1E=ON)
     echo "::endgroup::"
 fi

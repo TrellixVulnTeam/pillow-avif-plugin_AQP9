@@ -3,6 +3,7 @@ set -eo pipefail
 
 ARCHIVE_SDIR=pillow-avif-plugin-depends
 LIBAVIF_VERSION=0.9.0
+CARGO_C_VERSION=0.8.0
 
 function install_meson {
     echo "::group::Install meson"
@@ -50,6 +51,19 @@ function build_libavif {
             mkdir -p $libavif_dir/ext
             tar -C $libavif_dir/ext -zxf $ARCHIVE_SDIR/libavif-ext-$LIBAVIF_VERSION.tar.gz
         fi
+
+        if [ -e $HOME/.cargo/bin ] && [ ! -e $HOME/.cargo/bin/cargo-cbuild ]; then
+            local cargo_c_tgz
+            if [ -n "$IS_MACOS" ]; then
+                cargo_c_tgz="$ARCHIVE_SDIR/cargo-c-$CARGO_C_VERSION-macos.tar.gz"
+            else
+                cargo_c_tgz="$ARCHIVE_SDIR/cargo-c-$CARGO_C_VERSION-linux.tar.gz"
+            fi
+            if [ -e "$cargo_c_tgz" ]; then
+                tar -C $HOME/.cargo/bin -zxf "$cargo_c_tgz"
+            fi
+        fi
+
         LIBAVIF_CARGO_VENDOR_TGZ=$ARCHIVE_SDIR/libavif-rav1e-cargo-vendor-$LIBAVIF_VERSION.tar.gz
         if [ -e $LIBAVIF_CARGO_VENDOR_TGZ ] && [ -e "$HOME/.cargo" ]; then
             tar -C $ARCHIVE_SDIR -zxf $LIBAVIF_CARGO_VENDOR_TGZ
@@ -143,7 +157,7 @@ function pre_build {
         install_meson
 
         # rustup is incompatible with the glibc on el5
-        if [ "$MB_ML_VER" != "1" ]; then
+        if [ "$MB_ML_VER" != "1" ] && [ "$PLAT" != "i686" ]; then
             install_rust
             source $HOME/.cargo/env
         fi

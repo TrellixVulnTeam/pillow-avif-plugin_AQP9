@@ -20,8 +20,7 @@ aptget_update || aptget_update retry || aptget_update retry
 set -e
 
 sudo apt-get -qq install zlib1g-dev libpng-dev libjpeg-dev \
-    libxml2-dev libffi-dev libxslt-dev \
-    cmake ninja-build
+    libxml2-dev libffi-dev libxslt-dev cmake ninja-build nasm
 
 if [ "$GHA_PYTHON_VERSION" == "2.7" ]; then
     python2 -m pip install tox tox-gh-actions
@@ -30,13 +29,18 @@ else
 fi
 
 python3 -m pip install -U pip
-python3 -m pip install setuptools wheel && python3 -m pip install meson
+python3 -m pip install setuptools wheel
 
 export PATH="$HOME/.local/bin:$PATH"
 
 # TODO Remove when 3.8 / 3.9 includes setuptools 49.3.2+:
 if [ "$GHA_PYTHON_VERSION" == "3.8" ]; then python3 -m pip install -U "setuptools>=49.3.2" ; fi
 if [ "$GHA_PYTHON_VERSION" == "3.9" ]; then python3 -m pip install -U "setuptools>=49.3.2" ; fi
+
+# Install cargo-c
+# curl -sLo - \
+#     https://github.com/lu-zero/cargo-c/releases/download/v0.8.0/cargo-c-linux.tar.gz \
+# | tar -C /usr/local/bin -zxf -
 
 # libavif
 if [ ! -d depends/libavif-$LIBAVIF_VERSION ]; then

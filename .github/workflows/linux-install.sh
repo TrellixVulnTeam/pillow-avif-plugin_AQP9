@@ -37,11 +37,6 @@ export PATH="$HOME/.local/bin:$PATH"
 if [ "$GHA_PYTHON_VERSION" == "3.8" ]; then python3 -m pip install -U "setuptools>=49.3.2" ; fi
 if [ "$GHA_PYTHON_VERSION" == "3.9" ]; then python3 -m pip install -U "setuptools>=49.3.2" ; fi
 
-# Install cargo-c
-# curl -sLo - \
-#     https://github.com/lu-zero/cargo-c/releases/download/v0.8.0/cargo-c-linux.tar.gz \
-# | tar -C /usr/local/bin -zxf -
-
 # libavif
 if [ ! -d depends/libavif-$LIBAVIF_VERSION ]; then
     pushd depends && ./install_libavif.sh && popd

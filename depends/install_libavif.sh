@@ -26,9 +26,36 @@ curl -sLo - \
 pushd libavif-$LIBAVIF_VERSION
 echo "::endgroup::"
 
+HAS_DECODER=0
+HAS_ENCODER=0
+
+if $PKGCONFIG --exists dav1d; then
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
+    HAS_DECODER=1
+fi
+
+if $PKGCONFIG --exists rav1e; then
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
+    HAS_ENCODER=1
+fi
+
+if $PKGCONFIG --exists SvtAv1Enc; then
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
+    HAS_ENCODER=1
+fi
+
+if $PKGCONFIG --exists libgav1; then
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_LIBGAV1=ON)
+    HAS_DECODER=1
+fi
+
 if $PKGCONFIG --exists aom; then
     LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_AOM=ON)
-else
+    HAS_ENCODER=1
+    HAS_DECODER=1
+fi
+
+if [ "$HAS_ENCODER" != 1 ] || [ "$HAS_DECODER" != 1 ]; then
     echo "::group::Building aom"
     pushd ext > /dev/null
     bash aom.cmd
@@ -37,23 +64,7 @@ else
     echo "::endgroup::"
 fi
 
-if $PKGCONFIG --exists dav1d; then
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
-fi
-
-if $PKGCONFIG --exists rav1e; then
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
-fi
-
-if $PKGCONFIG --exists SvtAv1Enc; then
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
-fi
-
-if $PKGCONFIG --exists libgav1; then
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_LIBGAV1=ON)
-fi
-
-if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+if uname -s | grep -q Darwin; then
     # Prevent cmake from using @rpath in install id, so that delocate can
     # find and bundle the libavif dylib
     LIBAVIF_CMAKE_FLAGS+=("-DCMAKE_INSTALL_NAME_DIR=$PREFIX/lib" -DCMAKE_MACOSX_RPATH=OFF)

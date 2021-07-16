@@ -4,12 +4,13 @@ set -exo pipefail
 CONFIG_DIR=$(abspath $(dirname "${BASH_SOURCE[0]}"))
 
 ARCHIVE_SDIR=pillow-avif-plugin-depends
-LIBAVIF_VERSION=0.9.0
+LIBAVIF_VERSION=0.9.2
 CARGO_C_VERSION=0.8.0
 AOM_VERSION=2.0.2
-DAV1D_VERSION=0.8.2
-SVT_AV1_VERSION=0.8.6
+DAV1D_VERSION=0.9.0
+SVT_AV1_VERSION=0.8.7
 RAV1E_VERSION=0.4.0
+CMAKE_VERSION=3.18.4
 
 function install_meson {
     if [ -e meson-stamp ]; then return; fi
@@ -266,7 +267,7 @@ function install_cmake {
     if [ -n "$IS_MACOS" ]; then
         brew install cmake
     else
-        $PYTHON_EXE -m pip install cmake
+        build_simple cmake $CMAKE_VERSION "https://cmake.org/files/v${CMAKE_VERSION%.*}"
     fi
     echo "::endgroup::"
 }

@@ -10,7 +10,6 @@ AOM_VERSION=2.0.2
 DAV1D_VERSION=0.9.0
 SVT_AV1_VERSION=0.8.7
 RAV1E_VERSION=0.4.0
-CMAKE_VERSION=3.18.4
 
 function install_meson {
     if [ -e meson-stamp ]; then return; fi
@@ -267,7 +266,7 @@ function install_cmake {
     if [ -n "$IS_MACOS" ]; then
         brew install cmake
     else
-        build_simple cmake $CMAKE_VERSION "https://cmake.org/files/v${CMAKE_VERSION%.*}"
+        $PYTHON_EXE -m pip install cmake
     fi
     echo "::endgroup::"
 }

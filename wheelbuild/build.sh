@@ -2,6 +2,13 @@
 
 set -eo pipefail
 
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+  # webp, zstd, xz, libtiff cause a conflict with building webp and libtiff
+  # curl from brew requires zstd, use system curl
+  # if php is installed, brew tries to reinstall these after installing openblas
+  brew remove --ignore-dependencies webp zstd xz libtiff curl php
+fi
+
 if [[ "$MB_PYTHON_VERSION" == pypy3* ]]; then
   if [[ "$TRAVIS_OS_NAME" != "macos-latest" ]]; then
     DOCKER_TEST_IMAGE="multibuild/xenial_$PLAT"

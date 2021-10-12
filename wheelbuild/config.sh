@@ -136,13 +136,45 @@ function build_dav1d {
     install_meson
     install_ninja
 
+    local cflags="$CFLAGS"
+    local ldflags="$LDFLAGS"
+    local meson_flags=()
+
     echo "::group::Build dav1d"
     fetch_unpack "https://code.videolan.org/videolan/dav1d/-/archive/$DAV1D_VERSION/dav1d-$DAV1D_VERSION.tar.gz"
+
+    cat <<EOF > dav1d-$DAV1D_VERSION/config.txt
+[binaries]
+c     = 'clang'
+cpp   = 'clang++'
+ar    = 'ar'
+ld    = 'ld'
+strip = 'strip'
+[properties]
+c_args = ''
+c_link_args = ''
+cpp_args = ''
+cpp_link_args = ''
+[host_machine]
+system = 'darwin'
+cpu_family = 'aarch64'
+cpu = 'arm'
+endian = 'little'
+EOF
+
+    if [ "$PLAT" == "arm64" ]; then
+        cflags=""
+        ldflags=""
+        meson_flags+=(-D enable_asm=false --cross-file config.txt)
+    fi
+
     (cd dav1d-$DAV1D_VERSION \
-        && meson . build \
+        && CFLAGS="$cflags" LDFLAGS="$ldflags" \
+           meson . build \
               "--prefix=${BUILD_PREFIX}" \
               --default-library=static \
               --buildtype=release \
+             "${meson_flags[@]}" \
         && ninja -vC build install)
     echo "::endgroup::"
     touch dav1d-stamp
@@ -217,7 +249,7 @@ function build_libavif {
     build_dav1d
     LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
 
-    if [ "$PLAT" != "i686" ]; then
+    if [ "$PLAT" == "x86_64" ]; then
         if [ -n "$IS_MACOS" ]; then
             build_svt_av1
             LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
@@ -321,7 +353,9 @@ function pre_build {
     local libavif_build_dir="$REPO_DIR/depends/libavif-$LIBAVIF_VERSION/build"
 
     if [ ! -e "$libavif_build_dir" ]; then
-        build_nasm
+        if [ "$PLAT" != "arm64" ]; then
+            build_nasm
+        fi
         install_cmake
         install_ninja
         install_meson

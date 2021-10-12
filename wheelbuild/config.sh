@@ -41,9 +41,13 @@ function install_meson {
 function install_ninja {
     if [ -e ninja-stamp ]; then return; fi
     echo "::group::Install ninja"
-    $PYTHON_EXE -m pip install ninja
-    local ninja_exe=$(dirname $PYTHON_EXE)/ninja
-    ln -s $ninja_exe /usr/local/bin/ninja-build
+    if [ -n "$IS_MACOS" ]; then
+        brew install ninja
+    else
+        $PYTHON_EXE -m pip install ninja
+        local ninja_exe=$(dirname $PYTHON_EXE)/ninja
+        ln -s $ninja_exe /usr/local/bin/ninja-build
+    fi
     echo "::endgroup::"
     touch ninja-stamp
 }

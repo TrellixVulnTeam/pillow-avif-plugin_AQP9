@@ -151,6 +151,14 @@ jobs:
           key:
             ${{ env.LIBAVIF_VERSION }}-${{ hashFiles('pillow-avif-plugin/wheelbuild/*.sh', 'pillow-avif-plugin/.github/workflows/wheels.yml', 'pillow-avif-plugin/depends/*') }}-${{ matrix.os }}-${{ matrix.platform }}
 
+      - name: Cache sccache
+        id: sccache-cache
+        uses: actions/cache@v2
+        with:
+          path: sccache
+          key:
+            sccache-${{ matrix.os }}-${{ matrix.os-name }}-${{ matrix.platform }}
+
       - name: Build Wheel
         run: pillow-avif-plugin/wheelbuild/build.sh
 

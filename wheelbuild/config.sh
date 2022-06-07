@@ -341,22 +341,22 @@ function build_libavif {
     build_aom
     LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_AOM=ON)
 
-    build_dav1d
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
+    # build_dav1d
+    # LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
 
-    if [ "$PLAT" == "x86_64" ]; then
-        if [ -n "$IS_MACOS" ]; then
-            build_svt_av1
-            LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
-        elif [[ "$MB_ML_VER" != "1" ]]; then
-            LDFLAGS=-lrt build_svt_av1
-            LIBAVIF_CMAKE_FLAGS+=(-DCMAKE_EXE_LINKER_FLAGS=-lrt)
-            LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
-        fi
-    fi
+    # if [ "$PLAT" == "x86_64" ]; then
+    #     if [ -n "$IS_MACOS" ]; then
+    #         build_svt_av1
+    #         LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
+    #     elif [[ "$MB_ML_VER" != "1" ]]; then
+    #         LDFLAGS=-lrt build_svt_av1
+    #         LIBAVIF_CMAKE_FLAGS+=(-DCMAKE_EXE_LINKER_FLAGS=-lrt)
+    #         LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
+    #     fi
+    # fi
 
-    build_rav1e
-    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
+    # build_rav1e
+    # LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
 
     if [ -n "$IS_MACOS" ]; then
         # Prevent cmake from using @rpath in install id, so that delocate can

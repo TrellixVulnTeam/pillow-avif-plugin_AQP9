@@ -22,7 +22,7 @@ function install_sccache {
     echo "::group::Install sccache"
     if [ -n "$IS_MACOS" ]; then
         brew install sccache
-    else
+    elif [ ! -e /usr/local/bin/sccache ]; then
         local base_url="https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION"
         echo "base_url=$base_url"
         archive_name="sccache-v${SCCACHE_VERSION}-${PLAT}-unknown-linux-musl"
@@ -38,10 +38,9 @@ function install_sccache {
     if [ -e /usr/local/bin/sccache ]; then
         export USE_SCCACHE=1
         export RUSTC_WRAPPER=/usr/local/bin/sccache
-        export SCCACHE_DIR=/io/sccache
+        export SCCACHE_DIR=$PWD/sccache
     fi
     echo "::endgroup::"
-
 }
 
 function install_meson {
@@ -345,22 +344,22 @@ function build_libavif {
     build_aom
     LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_AOM=ON)
 
-    # build_dav1d
-    # LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
+    build_dav1d
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_DAV1D=ON)
 
-    # if [ "$PLAT" == "x86_64" ]; then
-    #     if [ -n "$IS_MACOS" ]; then
-    #         build_svt_av1
-    #         LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
-    #     elif [[ "$MB_ML_VER" != "1" ]]; then
-    #         LDFLAGS=-lrt build_svt_av1
-    #         LIBAVIF_CMAKE_FLAGS+=(-DCMAKE_EXE_LINKER_FLAGS=-lrt)
-    #         LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
-    #     fi
-    # fi
+    if [ "$PLAT" == "x86_64" ]; then
+        if [ -n "$IS_MACOS" ]; then
+            build_svt_av1
+            LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
+        elif [[ "$MB_ML_VER" != "1" ]]; then
+            LDFLAGS=-lrt build_svt_av1
+            LIBAVIF_CMAKE_FLAGS+=(-DCMAKE_EXE_LINKER_FLAGS=-lrt)
+            LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_SVT=ON)
+        fi
+    fi
 
-    # build_rav1e
-    # LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
+    build_rav1e
+    LIBAVIF_CMAKE_FLAGS+=(-DAVIF_CODEC_RAV1E=ON)
 
     if [ -n "$IS_MACOS" ]; then
         # Prevent cmake from using @rpath in install id, so that delocate can
@@ -401,11 +400,13 @@ function build_libavif {
 
 function build_nasm {
     echo "::group::Build nasm"
+    # local OLD_CC="${CC}"
     local CC="${CC:-gcc}"
     if [[ $(type -P sccache) ]]; then
         CC="sccache $CC"
     fi
-    build_simple nasm 2.15.05 https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/
+    SCCACHE_DIR="$SCCACHE_DIR" CC="$CC" build_simple nasm 2.15.05 https://www.nasm.us/pub/nasm/releasebuilds/2.15.05/
+    # export CC="$OLD_CC"
     echo "::endgroup::"
 }
 
@@ -447,8 +448,8 @@ function build_openssl {
         CC="sccache $CC"
     fi
     (cd ${OPENSSL_ROOT} \
-        && ./config no-ssl2 no-shared no-tests -fPIC --prefix=$BUILD_PREFIX \
-        && make -j4 \
+        && CC="$CC" ./config no-ssl2 no-shared no-tests -fPIC --prefix=$BUILD_PREFIX \
+        && SCCACHE_DIR="$SCCACHE_DIR" make -j4 \
         && make install_sw)
     touch openssl-stamp
     echo "::endgroup::"
@@ -496,10 +497,10 @@ function append_licenses {
 function pre_build {
     echo "::endgroup::"
 
-    append_licenses
-    ensure_sudo
-    ensure_openssl
-    install_zlib
+    # append_licenses
+    # ensure_sudo
+    # ensure_openssl
+    # install_zlib
     install_sccache
 
     local libavif_build_dir="$REPO_DIR/depends/libavif-$LIBAVIF_VERSION/build"

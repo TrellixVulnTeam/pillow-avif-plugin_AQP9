@@ -240,6 +240,10 @@ cpu = 'arm'
 endian = 'little'
 EOF
 
+     if [ -n "$USE_SCCACHE" ]; then
+        perl -pi -e "s/clang/sccache clang/g" dav1d-$DAV1D_VERSION/config.txt
+    fi
+
     if [ "$PLAT" == "arm64" ]; then
         cflags=""
         ldflags=""

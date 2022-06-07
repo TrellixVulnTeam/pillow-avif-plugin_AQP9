@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-20.04" ]
+        os: [ "ubuntu-20.04", "macOS-10.15" ]
         python: [ "3.9" ]
         platform: [ "x86_64" ]
         manylinux-version: [ "2010" ]
@@ -39,9 +39,9 @@ jobs:
         #     manylinux-version: "2010"
         #   - python: "3.10"
         #     manylinux-version: "1"
-        # include:
-        #   - os: "macOS-10.15"
-        #     os-name: "osx"
+        include:
+          - os: "macOS-10.15"
+            os-name: "osx"
         #   - os: "ubuntu-20.04"
         #     manylinux-version: "1"
         #     os-name: "manylinux1"

@@ -29,13 +29,17 @@ function install_sccache {
         echo "archive_name=$archive_name"
         echo "url=${base_url}/${archive_name}.tar.gz"
         echo "https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-aarch64-unknown-linux-musl.tar.gz"
-        fetch_unpack "${base_url}/${archive_name}.tar.gz" || echo "::endgroup::" && return 0
-        cp "$archive_name/sccache" "/usr/local/bin/sccache"
-        chmod +x /usr/local/bin/sccache
+        fetch_unpack "${base_url}/${archive_name}.tar.gz"
+        if [ -e "$archive_name/sccache" ]; then
+            cp "$archive_name/sccache" "/usr/local/bin/sccache"
+            chmod +x /usr/local/bin/sccache
+        fi
     fi
-    export USE_SCCACHE=1
-    export RUSTC_WRAPPER=/usr/local/bin/sccache
-    export SCCACHE_DIR=/io/sccache
+    if [ -e /usr/local/bin/sccache ]; then
+        export USE_SCCACHE=1
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
+        export SCCACHE_DIR=/io/sccache
+    fi
     echo "::endgroup::"
 
 }
